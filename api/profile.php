@@ -1,0 +1,166 @@
+<?php
+require_once 'config.php';
+requireLogin();
+
+$user_id = $_SESSION['user_id'];
+$action = $_GET['action'] ?? '';
+
+switch ($action) {
+    case 'get':
+        getProfile();
+        break;
+    case 'update':
+        updateProfile();
+        break;
+    case 'password':
+        changePassword();
+        break;
+    case 'upload':
+        uploadProfilePic();
+        break;
+    case 'settings':
+        handleSettings();
+        break;
+    case 'get_settings':
+        getSettings();
+        break;
+    default:
+        http_response_code(404);
+        echo json_encode(['error' => 'Action not found']);
+}
+
+function getProfile() {
+    global $pdo, $user_id;
+    $stmt = $pdo->prepare("SELECT id, full_name, username, email, profile_pic FROM users WHERE id = ?");
+    $stmt->execute([$user_id]);
+    echo json_encode(['success' => true, 'user' => $stmt->fetch()]);
+}
+
+function updateProfile() {
+    global $pdo, $user_id;
+    $data = json_decode(file_get_contents('php://input'), true);
+    $full_name = sanitize($data['full_name'] ?? '');
+    $email = sanitize($data['email'] ?? '');
+
+    if (empty($full_name) || empty($email)) {
+        http_response_code(400);
+        echo json_encode(['error' => 'All fields are required']);
+        return;
+    }
+
+    $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ? AND id != ?");
+    $stmt->execute([$email, $user_id]);
+    if ($stmt->fetch()) {
+        http_response_code(409);
+        echo json_encode(['error' => 'Email already in use']);
+        return;
+    }
+
+    $stmt = $pdo->prepare("UPDATE users SET full_name = ?, email = ? WHERE id = ?");
+    $stmt->execute([$full_name, $email, $user_id]);
+
+    logActivity($pdo, $user_id, 'update_profile', 'Updated profile');
+
+    echo json_encode(['success' => true, 'message' => 'Profile updated']);
+}
+
+function changePassword() {
+    global $pdo, $user_id;
+    $data = json_decode(file_get_contents('php://input'), true);
+    $current = $data['current_password'] ?? '';
+    $new = $data['new_password'] ?? '';
+    $confirm = $data['confirm_password'] ?? '';
+
+    if (empty($current) || empty($new) || empty($confirm)) {
+        http_response_code(400);
+        echo json_encode(['error' => 'All fields are required']);
+        return;
+    }
+
+    if ($new !== $confirm) {
+        http_response_code(400);
+        echo json_encode(['error' => 'New passwords do not match']);
+        return;
+    }
+
+    if (strlen($new) < 6) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Password must be at least 6 characters']);
+        return;
+    }
+
+    $stmt = $pdo->prepare("SELECT password FROM users WHERE id = ?");
+    $stmt->execute([$user_id]);
+    $user = $stmt->fetch();
+
+    if (!password_verify($current, $user['password'])) {
+        http_response_code(401);
+        echo json_encode(['error' => 'Current password is incorrect']);
+        return;
+    }
+
+    $hashed = password_hash($new, PASSWORD_BCRYPT);
+    $stmt = $pdo->prepare("UPDATE users SET password = ? WHERE id = ?");
+    $stmt->execute([$hashed, $user_id]);
+
+    echo json_encode(['success' => true, 'message' => 'Password changed']);
+}
+
+function uploadProfilePic() {
+    global $user_id;
+    $upload_dir = __DIR__ . '/../uploads/';
+    if (!is_dir($upload_dir)) mkdir($upload_dir, 0777, true);
+
+    if (!isset($_FILES['profile_pic'])) {
+        http_response_code(400);
+        echo json_encode(['error' => 'No file uploaded']);
+        return;
+    }
+
+    $file = $_FILES['profile_pic'];
+    $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+    $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+
+    if (!in_array($ext, $allowed)) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Invalid file type']);
+        return;
+    }
+
+    $filename = 'user_' . $user_id . '_' . time() . '.' . $ext;
+    move_uploaded_file($file['tmp_name'], $upload_dir . $filename);
+
+    global $pdo;
+    $stmt = $pdo->prepare("UPDATE users SET profile_pic = ? WHERE id = ?");
+    $stmt->execute([$filename, $user_id]);
+
+    echo json_encode(['success' => true, 'message' => 'Profile picture updated', 'filename' => $filename]);
+}
+
+function handleSettings() {
+    global $pdo, $user_id;
+    $data = json_decode(file_get_contents('php://input'), true);
+
+    $stmt = $pdo->prepare("UPDATE user_settings SET dark_mode = ?, notifications = ?, language = ? WHERE user_id = ?");
+    $stmt->execute([
+        (int)($data['dark_mode'] ?? 0),
+        (int)($data['notifications'] ?? 1),
+        sanitize($data['language'] ?? 'en'),
+        $user_id
+    ]);
+
+    echo json_encode(['success' => true, 'message' => 'Settings saved']);
+}
+
+function getSettings() {
+    global $pdo, $user_id;
+    $stmt = $pdo->prepare("SELECT * FROM user_settings WHERE user_id = ?");
+    $stmt->execute([$user_id]);
+    $settings = $stmt->fetch();
+    if (!$settings) {
+        $stmt = $pdo->prepare("INSERT INTO user_settings (user_id) VALUES (?)");
+        $stmt->execute([$user_id]);
+        $settings = ['dark_mode' => 0, 'notifications' => 1, 'language' => 'en'];
+    }
+    echo json_encode(['success' => true, 'settings' => $settings]);
+}

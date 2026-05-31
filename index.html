@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskFlow - Modern To-Do List</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="assets/css/style.css" rel="stylesheet">
+</head>
+<body>
+    <div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3"></div>
+
+    <!-- Auth Page -->
+    <div id="authPage" class="auth-page">
+        <div class="auth-container">
+            <div class="auth-card">
+                <div class="text-center mb-4">
+                    <div class="auth-logo">
+                        <i class="bi bi-check2-square"></i>
+                    </div>
+                    <h3 id="authTitle">Welcome Back</h3>
+                    <p id="authSubtitle" class="text-muted">Sign in to continue to TaskFlow</p>
+                </div>
+
+                <form id="authForm">
+                    <div id="registerFields" style="display:none">
+                        <div class="form-floating mb-3">
+                            <input type="text" class="form-control" id="regFullName" placeholder="Full Name">
+                            <label>Full Name</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <input type="text" class="form-control" id="regUsername" placeholder="Username">
+                            <label>Username</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <input type="email" class="form-control" id="regEmail" placeholder="Email">
+                            <label>Email Address</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <input type="password" class="form-control" id="regPassword" placeholder="Password">
+                            <label>Password</label>
+                            <div class="password-strength mt-2" id="passwordStrength"><div class="strength-bar"></div></div>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <input type="password" class="form-control" id="regConfirm" placeholder="Confirm">
+                            <label>Confirm Password</label>
+                        </div>
+                    </div>
+                    <div id="loginFields">
+                        <div class="form-floating mb-3">
+                            <input type="text" class="form-control" id="loginUsername" placeholder="Username or Email">
+                            <label>Username or Email</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <input type="password" class="form-control" id="loginPassword" placeholder="Password">
+                            <label>Password</label>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="rememberMe">
+                                <label class="form-check-label" for="rememberMe">Remember me</label>
+                            </div>
+                            <a href="#" class="text-decoration-none small" id="forgotPwd">Forgot password?</a>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 py-2 mb-3" id="authSubmitBtn">Sign In</button>
+                </form>
+
+                <div class="text-center">
+                    <p class="mb-0 small">
+                        <span id="authToggleText">Don't have an account?</span>
+                        <a href="#" id="authToggle" class="text-decoration-none fw-semibold">Sign Up</a>
+                    </p>
+                </div>
+                <div id="authError" class="alert alert-danger mt-3 d-none"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- App Shell -->
+    <div id="appShell" style="display:none">
+        <!-- Sidebar -->
+        <nav id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <a href="#" class="sidebar-brand" onclick="navigate('dashboard')">
+                    <i class="bi bi-check2-square"></i>
+                    <span>TaskFlow</span>
+                </a>
+                <button class="btn btn-link sidebar-close d-lg-none" onclick="toggleSidebar()">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div class="sidebar-body">
+                <ul class="sidebar-nav">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link active" data-page="dashboard" onclick="navigate('dashboard')">
+                            <i class="bi bi-grid-1x2"></i><span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-page="tasks" onclick="navigate('tasks')">
+                            <i class="bi bi-list-task"></i><span>My Tasks</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-page="categories" onclick="navigate('categories')">
+                            <i class="bi bi-tags"></i><span>Categories</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-page="calendar" onclick="navigate('calendar')">
+                            <i class="bi bi-calendar3"></i><span>Calendar</span>
+                        </a>
+                    </li>
+                </ul>
+                <hr>
+                <ul class="sidebar-nav">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-page="profile" onclick="navigate('profile')">
+                            <i class="bi bi-person"></i><span>Profile</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-page="settings" onclick="navigate('settings')">
+                            <i class="bi bi-gear"></i><span>Settings</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link text-danger" onclick="logout()">
+                            <i class="bi bi-box-arrow-right"></i><span>Logout</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Top Nav -->
+            <header class="top-navbar">
+                <button class="btn btn-link sidebar-toggle d-lg-none" onclick="toggleSidebar()">
+                    <i class="bi bi-list"></i>
+                </button>
+                <div class="search-box d-none d-md-flex">
+                    <i class="bi bi-search"></i>
+                    <input type="text" class="form-control" id="globalSearch" placeholder="Search tasks..." oninput="handleSearch(this.value)">
+                </div>
+                <div class="top-nav-actions">
+                    <button class="btn btn-link nav-icon" onclick="toggleDarkMode()" title="Toggle Theme">
+                        <i class="bi bi-moon-fill" id="themeIcon"></i>
+                    </button>
+                    <button class="btn btn-link nav-icon position-relative" id="notifBell" title="Notifications">
+                        <i class="bi bi-bell"></i>
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none" id="notifBadge">0</span>
+                    </button>
+                    <div class="dropdown">
+                        <button class="btn btn-link nav-icon dropdown-toggle" data-bs-toggle="dropdown">
+                            <img src="assets/img/default.png" id="navProfilePic" class="rounded-circle" width="32" height="32" alt="Profile">
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#" onclick="navigate('profile')"><i class="bi bi-person me-2"></i>Profile</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="navigate('settings')"><i class="bi bi-gear me-2"></i>Settings</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="#" onclick="logout()"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Pages -->
+            <div class="page-content">
+                <!-- Dashboard Page -->
+                <div id="page-dashboard" class="page active">
+                    <div class="page-header">
+                        <h4 class="page-title">Dashboard</h4>
+                        <p class="page-subtitle">Welcome back, <span id="dashboardUserName">User</span>!</p>
+                    </div>
+                    <div class="stats-grid" id="statsContainer"></div>
+                    <div class="row mt-4">
+                        <div class="col-lg-8">
+                            <div class="card dashboard-card h-100">
+                                <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+                                    <h6 class="card-title mb-0"><i class="bi bi-graph-up me-2"></i>Progress Overview</h6>
+                                    <span class="badge bg-primary" id="progressPercent">0%</span>
+                                </div>
+                                <div class="card-body">
+                                    <div class="progress mb-3" style="height:12px">
+                                        <div class="progress-bar bg-success progress-bar-striped progress-bar-animated" id="progressBar" style="width:0%"></div>
+                                    </div>
+                                    <canvas id="dashboardChart" height="180"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4 mt-3 mt-lg-0">
+                            <div class="card dashboard-card h-100">
+                                <div class="card-header bg-transparent border-0">
+                                    <h6 class="card-title mb-0"><i class="bi bi-calendar-check me-2"></i>Upcoming Tasks</h6>
+                                </div>
+                                <div class="card-body" id="upcomingTasksList"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tasks (Kanban) Page -->
+                <div id="page-tasks" class="page">
+                    <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div>
+                            <h4 class="page-title">My Tasks</h4>
+                            <p class="page-subtitle">Manage and organize your tasks</p>
+                        </div>
+                        <button class="btn btn-primary" onclick="openTaskModal()"><i class="bi bi-plus-lg me-1"></i>New Task</button>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-3 mb-2">
+                            <select class="form-select form-select-sm" id="filterCategory" onchange="filterTasks()">
+                                <option value="">All Categories</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 mb-2">
+                            <select class="form-select form-select-sm" id="filterPriority" onchange="filterTasks()">
+                                <option value="">All Priorities</option>
+                                <option value="low">Low</option>
+                                <option value="medium">Medium</option>
+                                <option value="high">High</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 mb-2">
+                            <select class="form-select form-select-sm" id="filterStatus" onchange="filterTasks()">
+                                <option value="">All Status</option>
+                                <option value="pending">Pending</option>
+                                <option value="in_progress">In Progress</option>
+                                <option value="completed">Completed</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 mb-2">
+                            <input type="date" class="form-control form-control-sm" id="filterDate" onchange="filterTasks()">
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <select class="form-select form-select-sm" id="sortTasks" onchange="filterTasks()">
+                                <option value="newest">Newest First</option>
+                                <option value="oldest">Oldest First</option>
+                                <option value="due_date">Due Date</option>
+                                <option value="priority">Priority</option>
+                                <option value="status">Status</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="kanban-board" id="kanbanBoard"></div>
+                </div>
+
+                <!-- Categories Page -->
+                <div id="page-categories" class="page">
+                    <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div>
+                            <h4 class="page-title">Categories</h4>
+                            <p class="page-subtitle">Organize your tasks with categories</p>
+                        </div>
+                        <button class="btn btn-primary" onclick="openCategoryModal()"><i class="bi bi-plus-lg me-1"></i>New Category</button>
+                    </div>
+                    <div class="row" id="categoriesList"></div>
+                </div>
+
+                <!-- Calendar Page -->
+                <div id="page-calendar" class="page">
+                    <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div>
+                            <h4 class="page-title">Calendar</h4>
+                            <p class="page-subtitle">View your tasks by date</p>
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn btn-outline-primary btn-sm" onclick="calendarView='month';renderCalendar()">Month</button>
+                            <button class="btn btn-outline-primary btn-sm" onclick="calendarView='week';renderCalendar()">Week</button>
+                        </div>
+                    </div>
+                    <div class="card dashboard-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <button class="btn btn-outline-secondary btn-sm" onclick="changeMonth(-1)"><i class="bi bi-chevron-left"></i></button>
+                                <h5 id="calendarTitle" class="mb-0"></h5>
+                                <button class="btn btn-outline-secondary btn-sm" onclick="changeMonth(1)"><i class="bi bi-chevron-right"></i></button>
+                            </div>
+                            <div id="calendarGrid"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Profile Page -->
+                <div id="page-profile" class="page">
+                    <div class="page-header">
+                        <h4 class="page-title">Profile</h4>
+                        <p class="page-subtitle">Manage your account information</p>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-4 mb-4">
+                            <div class="card dashboard-card text-center">
+                                <div class="card-body">
+                                    <div class="profile-pic-wrapper mb-3">
+                                        <img src="assets/img/default.png" id="profilePic" class="rounded-circle" width="120" height="120" alt="Profile">
+                                        <label class="profile-pic-upload">
+                                            <i class="bi bi-camera-fill"></i>
+                                            <input type="file" id="profilePicInput" accept="image/*" onchange="uploadProfilePic(event)" hidden>
+                                        </label>
+                                    </div>
+                                    <h5 id="profileName">User</h5>
+                                    <p class="text-muted small" id="profileUsername">@username</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-8 mb-4">
+                            <div class="card dashboard-card">
+                                <div class="card-body">
+                                    <h6 class="mb-3">Edit Profile</h6>
+                                    <form id="profileForm">
+                                        <div class="mb-3">
+                                            <label class="form-label small">Full Name</label>
+                                            <input type="text" class="form-control" id="editFullName">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label small">Email Address</label>
+                                            <input type="email" class="form-control" id="editEmail">
+                                        </div>
+                                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                                    </form>
+                                    <hr>
+                                    <h6 class="mb-3">Change Password</h6>
+                                    <form id="passwordForm">
+                                        <div class="mb-3">
+                                            <label class="form-label small">Current Password</label>
+                                            <input type="password" class="form-control" id="currentPwd">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label small">New Password</label>
+                                            <input type="password" class="form-control" id="newPwd">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label small">Confirm New Password</label>
+                                            <input type="password" class="form-control" id="confirmNewPwd">
+                                        </div>
+                                        <button type="submit" class="btn btn-warning">Change Password</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Page -->
+                <div id="page-settings" class="page">
+                    <div class="page-header">
+                        <h4 class="page-title">Settings</h4>
+                        <p class="page-subtitle">Customize your experience</p>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-6 mb-4">
+                            <div class="card dashboard-card">
+                                <div class="card-body">
+                                    <h6 class="mb-3">Appearance</h6>
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <div>
+                                            <span>Dark Mode</span>
+                                            <p class="text-muted small mb-0">Toggle dark/light theme</p>
+                                        </div>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="darkModeSwitch" onchange="toggleDarkMode()">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6 mb-4">
+                            <div class="card dashboard-card">
+                                <div class="card-body">
+                                    <h6 class="mb-3">Preferences</h6>
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <div>
+                                            <span>Notifications</span>
+                                            <p class="text-muted small mb-0">Enable toast notifications</p>
+                                        </div>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="notifSwitch" checked>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label small">Language</label>
+                                        <select class="form-select" id="langSelect">
+                                            <option value="en">English</option>
+                                            <option value="es">Español</option>
+                                            <option value="fr">Français</option>
+                                            <option value="de">Deutsch</option>
+                                        </select>
+                                    </div>
+                                    <button class="btn btn-primary" onclick="saveSettings()">Save Settings</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Task Modal -->
+    <div class="modal fade" id="taskModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title" id="taskModalTitle">New Task</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="taskForm">
+                        <input type="hidden" id="taskId">
+                        <div class="mb-3">
+                            <label class="form-label small">Task Title</label>
+                            <input type="text" class="form-control" id="taskTitle" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small">Description</label>
+                            <textarea class="form-control" id="taskDescription" rows="3"></textarea>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small">Category</label>
+                                <select class="form-select" id="taskCategory"></select>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label small">Priority</label>
+                                <select class="form-select" id="taskPriority">
+                                    <option value="low">Low</option>
+                                    <option value="medium" selected>Medium</option>
+                                    <option value="high">High</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label small">Status</label>
+                                <select class="form-select" id="taskStatus">
+                                    <option value="pending">Pending</option>
+                                    <option value="in_progress">In Progress</option>
+                                    <option value="completed">Completed</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small">Due Date</label>
+                                <input type="date" class="form-control" id="taskDueDate">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small">Notes</label>
+                                <input type="text" class="form-control" id="taskNotes" placeholder="Additional notes">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveTask()">Save Task</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Modal -->
+    <div class="modal fade" id="categoryModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title" id="categoryModalTitle">New Category</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="categoryForm">
+                        <input type="hidden" id="categoryId">
+                        <div class="mb-3">
+                            <label class="form-label small">Category Name</label>
+                            <input type="text" class="form-control" id="categoryName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small">Color</label>
+                            <input type="color" class="form-control form-control-color" id="categoryColor" value="#0d6efd">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveCategory()">Save Category</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Task Modal -->
+    <div class="modal fade" id="viewTaskModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title" id="viewTaskTitle"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="viewTaskBody"></div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Add FAB -->
+    <button class="fab" onclick="openTaskModal()" title="Quick Add Task">
+        <i class="bi bi-plus"></i>
+    </button>
+
+    <!-- Overlay for mobile sidebar -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="assets/js/app.js"></script>
+</body>
+</html>
