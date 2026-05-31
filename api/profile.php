@@ -25,15 +25,14 @@ switch ($action) {
         getSettings();
         break;
     default:
-        http_response_code(404);
-        echo json_encode(['error' => 'Action not found']);
+                jsonOut(["error" => "Action not found"], 404);
 }
 
 function getProfile() {
     global $pdo, $user_id;
     $stmt = $pdo->prepare("SELECT id, full_name, username, email, profile_pic FROM users WHERE id = ?");
     $stmt->execute([$user_id]);
-    echo json_encode(['success' => true, 'user' => $stmt->fetch()]);
+    jsonOut(['success' => true, 'user' => $stmt->fetch()]);
 }
 
 function updateProfile() {
@@ -43,16 +42,14 @@ function updateProfile() {
     $email = sanitize($data['email'] ?? '');
 
     if (empty($full_name) || empty($email)) {
-        http_response_code(400);
-        echo json_encode(['error' => 'All fields are required']);
+                jsonOut(["error" => "All fields are required"], 400);
         return;
     }
 
     $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ? AND id != ?");
     $stmt->execute([$email, $user_id]);
     if ($stmt->fetch()) {
-        http_response_code(409);
-        echo json_encode(['error' => 'Email already in use']);
+                jsonOut(["error" => "Email already in use"], 409);
         return;
     }
 
@@ -61,7 +58,7 @@ function updateProfile() {
 
     logActivity($pdo, $user_id, 'update_profile', 'Updated profile');
 
-    echo json_encode(['success' => true, 'message' => 'Profile updated']);
+    jsonOut(['success' => true, 'message' => 'Profile updated']);
 }
 
 function changePassword() {
@@ -72,20 +69,17 @@ function changePassword() {
     $confirm = $data['confirm_password'] ?? '';
 
     if (empty($current) || empty($new) || empty($confirm)) {
-        http_response_code(400);
-        echo json_encode(['error' => 'All fields are required']);
+                jsonOut(["error" => "All fields are required"], 400);
         return;
     }
 
     if ($new !== $confirm) {
-        http_response_code(400);
-        echo json_encode(['error' => 'New passwords do not match']);
+                jsonOut(["error" => "New passwords do not match"], 400);
         return;
     }
 
     if (strlen($new) < 6) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Password must be at least 6 characters']);
+                jsonOut(["error" => "Password must be at least 6 characters"], 400);
         return;
     }
 
@@ -94,8 +88,7 @@ function changePassword() {
     $user = $stmt->fetch();
 
     if (!password_verify($current, $user['password'])) {
-        http_response_code(401);
-        echo json_encode(['error' => 'Current password is incorrect']);
+                jsonOut(["error" => "Current password is incorrect"], 401);
         return;
     }
 
@@ -103,7 +96,7 @@ function changePassword() {
     $stmt = $pdo->prepare("UPDATE users SET password = ? WHERE id = ?");
     $stmt->execute([$hashed, $user_id]);
 
-    echo json_encode(['success' => true, 'message' => 'Password changed']);
+    jsonOut(['success' => true, 'message' => 'Password changed']);
 }
 
 function uploadProfilePic() {
@@ -112,8 +105,7 @@ function uploadProfilePic() {
     if (!is_dir($upload_dir)) mkdir($upload_dir, 0777, true);
 
     if (!isset($_FILES['profile_pic'])) {
-        http_response_code(400);
-        echo json_encode(['error' => 'No file uploaded']);
+                jsonOut(["error" => "No file uploaded"], 400);
         return;
     }
 
@@ -122,8 +114,7 @@ function uploadProfilePic() {
     $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
 
     if (!in_array($ext, $allowed)) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Invalid file type']);
+                jsonOut(["error" => "Invalid file type"], 400);
         return;
     }
 
@@ -134,7 +125,7 @@ function uploadProfilePic() {
     $stmt = $pdo->prepare("UPDATE users SET profile_pic = ? WHERE id = ?");
     $stmt->execute([$filename, $user_id]);
 
-    echo json_encode(['success' => true, 'message' => 'Profile picture updated', 'filename' => $filename]);
+    jsonOut(['success' => true, 'message' => 'Profile picture updated', 'filename' => $filename]);
 }
 
 function handleSettings() {
@@ -149,7 +140,7 @@ function handleSettings() {
         $user_id
     ]);
 
-    echo json_encode(['success' => true, 'message' => 'Settings saved']);
+    jsonOut(['success' => true, 'message' => 'Settings saved']);
 }
 
 function getSettings() {
@@ -162,5 +153,7 @@ function getSettings() {
         $stmt->execute([$user_id]);
         $settings = ['dark_mode' => 0, 'notifications' => 1, 'language' => 'en'];
     }
-    echo json_encode(['success' => true, 'settings' => $settings]);
+    jsonOut(['success' => true, 'settings' => $settings]);
 }
+
+

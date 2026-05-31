@@ -17,8 +17,7 @@ switch ($action) {
         checkSession();
         break;
     default:
-        http_response_code(404);
-        echo json_encode(['error' => 'Action not found']);
+        jsonOut(['error' => 'Action not found'], 404);
 }
 
 function handleRegister() {
@@ -32,37 +31,27 @@ function handleRegister() {
     $confirm_password = $data['confirm_password'] ?? '';
 
     if (empty($full_name) || empty($username) || empty($email) || empty($password)) {
-        http_response_code(400);
-        echo json_encode(['error' => 'All fields are required']);
-        return;
+        jsonOut(['error' => 'All fields are required'], 400);
     }
 
     if ($password !== $confirm_password) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Passwords do not match']);
-        return;
+        jsonOut(['error' => 'Passwords do not match'], 400);
     }
 
     if (strlen($password) < 6) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Password must be at least 6 characters']);
-        return;
+        jsonOut(['error' => 'Password must be at least 6 characters'], 400);
     }
 
     $stmt = $pdo->prepare("SELECT id FROM users WHERE username = ?");
     $stmt->execute([$username]);
     if ($stmt->fetch()) {
-        http_response_code(409);
-        echo json_encode(['error' => 'Username already exists']);
-        return;
+        jsonOut(['error' => 'Username already exists'], 409);
     }
 
     $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
     $stmt->execute([$email]);
     if ($stmt->fetch()) {
-        http_response_code(409);
-        echo json_encode(['error' => 'Email already exists']);
-        return;
+        jsonOut(['error' => 'Email already exists'], 409);
     }
 
     $hashed = password_hash($password, PASSWORD_BCRYPT);
@@ -87,7 +76,7 @@ function handleRegister() {
 
     logActivity($pdo, $user_id, 'register', 'User registered');
 
-    echo json_encode(['success' => true, 'message' => 'Registration successful']);
+    jsonOut(['success' => true, 'message' => 'Registration successful']);
 }
 
 function handleLogin() {
@@ -99,9 +88,7 @@ function handleLogin() {
     $remember = $data['remember'] ?? false;
 
     if (empty($login) || empty($password)) {
-        http_response_code(400);
-        echo json_encode(['error' => 'All fields are required']);
-        return;
+        jsonOut(['error' => 'All fields are required'], 400);
     }
 
     $stmt = $pdo->prepare("SELECT * FROM users WHERE username = ? OR email = ?");
@@ -109,9 +96,7 @@ function handleLogin() {
     $user = $stmt->fetch();
 
     if (!$user || !password_verify($password, $user['password'])) {
-        http_response_code(401);
-        echo json_encode(['error' => 'Invalid credentials']);
-        return;
+        jsonOut(['error' => 'Invalid credentials'], 401);
     }
 
     $_SESSION['user_id'] = $user['id'];
@@ -124,7 +109,7 @@ function handleLogin() {
 
     logActivity($pdo, $user['id'], 'login', 'User logged in');
 
-    echo json_encode([
+    jsonOut([
         'success' => true,
         'message' => 'Login successful',
         'user' => [
@@ -140,7 +125,7 @@ function handleLogin() {
 function handleLogout() {
     session_destroy();
     setcookie('remember_token', '', time() - 3600, '/');
-    echo json_encode(['success' => true, 'message' => 'Logged out successfully']);
+    jsonOut(['success' => true, 'message' => 'Logged out successfully']);
 }
 
 function checkSession() {
@@ -150,9 +135,10 @@ function checkSession() {
         $stmt->execute([$_SESSION['user_id']]);
         $user = $stmt->fetch();
         if ($user) {
-            echo json_encode(['logged_in' => true, 'user' => $user]);
+            jsonOut(['logged_in' => true, 'user' => $user]);
             return;
         }
     }
-    echo json_encode(['logged_in' => false]);
+    jsonOut(['logged_in' => false]);
 }
+

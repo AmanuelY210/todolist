@@ -45,4 +45,5 @@ $stmt = $pdo->prepare("SELECT * FROM activity_logs WHERE user_id = ? ORDER BY cr
 $stmt->execute([$user_id]);
 $stats['recent_activity'] = $stmt->fetchAll();
 
-echo json_encode(['success' => true, 'stats' => $stats]);
+jsonOut(['success' => true, 'stats' => $stats]);
+

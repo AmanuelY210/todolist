@@ -19,8 +19,7 @@ switch ($action) {
         deleteCategory();
         break;
     default:
-        http_response_code(404);
-        echo json_encode(['error' => 'Action not found']);
+                jsonOut(["error" => "Action not found"], 404);
 }
 
 function listCategories() {
@@ -28,7 +27,7 @@ function listCategories() {
     $stmt = $pdo->prepare("SELECT * FROM categories WHERE user_id = ? ORDER BY name ASC");
     $stmt->execute([$user_id]);
     $categories = $stmt->fetchAll();
-    echo json_encode(['success' => true, 'categories' => $categories]);
+    jsonOut(['success' => true, 'categories' => $categories]);
 }
 
 function createCategory() {
@@ -38,16 +37,14 @@ function createCategory() {
     $color = sanitize($data['color'] ?? '#6c757d');
 
     if (empty($name)) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Category name is required']);
+                jsonOut(["error" => "Category name is required"], 400);
         return;
     }
 
     $stmt = $pdo->prepare("SELECT id FROM categories WHERE user_id = ? AND name = ?");
     $stmt->execute([$user_id, $name]);
     if ($stmt->fetch()) {
-        http_response_code(409);
-        echo json_encode(['error' => 'Category already exists']);
+                jsonOut(["error" => "Category already exists"], 409);
         return;
     }
 
@@ -59,7 +56,7 @@ function createCategory() {
 
     $stmt = $pdo->prepare("SELECT * FROM categories WHERE id = ?");
     $stmt->execute([$cat_id]);
-    echo json_encode(['success' => true, 'message' => 'Category created', 'category' => $stmt->fetch()]);
+    jsonOut(['success' => true, 'message' => 'Category created', 'category' => $stmt->fetch()]);
 }
 
 function updateCategory() {
@@ -70,16 +67,14 @@ function updateCategory() {
     $color = sanitize($data['color'] ?? '#6c757d');
 
     if (empty($name)) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Category name is required']);
+                jsonOut(["error" => "Category name is required"], 400);
         return;
     }
 
     $stmt = $pdo->prepare("SELECT id FROM categories WHERE id = ? AND user_id = ?");
     $stmt->execute([$id, $user_id]);
     if (!$stmt->fetch()) {
-        http_response_code(404);
-        echo json_encode(['error' => 'Category not found']);
+                jsonOut(["error" => "Category not found"], 404);
         return;
     }
 
@@ -88,7 +83,7 @@ function updateCategory() {
 
     logActivity($pdo, $user_id, 'update_category', "Updated category: $name");
 
-    echo json_encode(['success' => true, 'message' => 'Category updated']);
+    jsonOut(['success' => true, 'message' => 'Category updated']);
 }
 
 function deleteCategory() {
@@ -99,8 +94,7 @@ function deleteCategory() {
     $stmt = $pdo->prepare("SELECT id FROM categories WHERE id = ? AND user_id = ?");
     $stmt->execute([$id, $user_id]);
     if (!$stmt->fetch()) {
-        http_response_code(404);
-        echo json_encode(['error' => 'Category not found']);
+                jsonOut(["error" => "Category not found"], 404);
         return;
     }
 
@@ -112,5 +106,7 @@ function deleteCategory() {
 
     logActivity($pdo, $user_id, 'delete_category', 'Deleted category');
 
-    echo json_encode(['success' => true, 'message' => 'Category deleted']);
+    jsonOut(['success' => true, 'message' => 'Category deleted']);
 }
+
+

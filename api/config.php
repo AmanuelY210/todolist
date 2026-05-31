@@ -1,4 +1,31 @@
 <?php
+error_reporting(0);
+ini_set('display_errors', 0);
+ob_start();
+
+register_shutdown_function(function() {
+    $e = error_get_last();
+    if ($e && in_array($e['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
+        $out = ob_get_clean();
+        if (!headers_sent()) {
+            header('Content-Type: application/json', true, 500);
+            header('Access-Control-Allow-Origin: *');
+        }
+        echo json_encode(['error' => 'Internal server error']);
+    }
+});
+
+function jsonOut($data, $status = 200) {
+    ob_clean();
+    http_response_code($status);
+    header('Content-Type: application/json');
+    header('Access-Control-Allow-Origin: *');
+    header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+    header('Access-Control-Allow-Headers: Content-Type, Authorization');
+    echo json_encode($data);
+    exit;
+}
+
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');

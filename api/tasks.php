@@ -28,8 +28,7 @@ switch ($action) {
         reorderTask();
         break;
     default:
-        http_response_code(404);
-        echo json_encode(['error' => 'Action not found']);
+                jsonOut(["error" => "Action not found"], 404);
 }
 
 function listTasks() {
@@ -80,7 +79,7 @@ function listTasks() {
     $stmt->execute($params);
     $tasks = $stmt->fetchAll();
 
-    echo json_encode(['success' => true, 'tasks' => $tasks]);
+    jsonOut(['success' => true, 'tasks' => $tasks]);
 }
 
 function createTask() {
@@ -96,8 +95,7 @@ function createTask() {
     $notes = sanitize($data['notes'] ?? '');
 
     if (empty($title)) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Title is required']);
+                jsonOut(["error" => "Title is required"], 400);
         return;
     }
 
@@ -115,7 +113,7 @@ function createTask() {
     $stmt->execute([$task_id]);
     $task = $stmt->fetch();
 
-    echo json_encode(['success' => true, 'message' => 'Task created', 'task' => $task]);
+    jsonOut(['success' => true, 'message' => 'Task created', 'task' => $task]);
 }
 
 function getTask() {
@@ -127,12 +125,11 @@ function getTask() {
     $task = $stmt->fetch();
 
     if (!$task) {
-        http_response_code(404);
-        echo json_encode(['error' => 'Task not found']);
+                jsonOut(["error" => "Task not found"], 404);
         return;
     }
 
-    echo json_encode(['success' => true, 'task' => $task]);
+    jsonOut(['success' => true, 'task' => $task]);
 }
 
 function updateTask() {
@@ -143,8 +140,7 @@ function updateTask() {
     $stmt = $pdo->prepare("SELECT id FROM tasks WHERE id = ? AND user_id = ?");
     $stmt->execute([$id, $user_id]);
     if (!$stmt->fetch()) {
-        http_response_code(404);
-        echo json_encode(['error' => 'Task not found']);
+                jsonOut(["error" => "Task not found"], 404);
         return;
     }
 
@@ -157,8 +153,7 @@ function updateTask() {
     $notes = sanitize($data['notes'] ?? '');
 
     if (empty($title)) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Title is required']);
+                jsonOut(["error" => "Title is required"], 400);
         return;
     }
 
@@ -175,7 +170,7 @@ function updateTask() {
     $stmt->execute([$id]);
     $task = $stmt->fetch();
 
-    echo json_encode(['success' => true, 'message' => 'Task updated', 'task' => $task]);
+    jsonOut(['success' => true, 'message' => 'Task updated', 'task' => $task]);
 }
 
 function deleteTask() {
@@ -188,8 +183,7 @@ function deleteTask() {
     $task = $stmt->fetch();
 
     if (!$task) {
-        http_response_code(404);
-        echo json_encode(['error' => 'Task not found']);
+                jsonOut(["error" => "Task not found"], 404);
         return;
     }
 
@@ -198,7 +192,7 @@ function deleteTask() {
 
     logActivity($pdo, $user_id, 'delete_task', "Deleted task: {$task['title']}");
 
-    echo json_encode(['success' => true, 'message' => 'Task deleted']);
+    jsonOut(['success' => true, 'message' => 'Task deleted']);
 }
 
 function duplicateTask() {
@@ -211,8 +205,7 @@ function duplicateTask() {
     $task = $stmt->fetch();
 
     if (!$task) {
-        http_response_code(404);
-        echo json_encode(['error' => 'Task not found']);
+                jsonOut(["error" => "Task not found"], 404);
         return;
     }
 
@@ -226,7 +219,7 @@ function duplicateTask() {
     $stmt->execute([$new_id]);
     $new_task = $stmt->fetch();
 
-    echo json_encode(['success' => true, 'message' => 'Task duplicated', 'task' => $new_task]);
+    jsonOut(['success' => true, 'message' => 'Task duplicated', 'task' => $new_task]);
 }
 
 function reorderTask() {
@@ -236,13 +229,14 @@ function reorderTask() {
     $new_status = sanitize($data['status'] ?? '');
 
     if (!in_array($new_status, ['pending', 'in_progress', 'completed'])) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Invalid status']);
+                jsonOut(["error" => "Invalid status"], 400);
         return;
     }
 
     $stmt = $pdo->prepare("UPDATE tasks SET status = ? WHERE id = ? AND user_id = ?");
     $stmt->execute([$new_status, $id, $user_id]);
 
-    echo json_encode(['success' => true, 'message' => 'Task moved']);
+    jsonOut(['success' => true, 'message' => 'Task moved']);
 }
+
+
