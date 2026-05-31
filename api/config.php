@@ -37,9 +37,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 $host = 'localhost';
-$dbname = 'todo_list';
-$username = 'root';
-$password = '';
+$dbname = 'todo_list';          // cPanel: use your prefixed name like cpses_grxnyqcyi9_todolist
+$username = 'root';             // cPanel: your database username
+$password = '';                 // cPanel: your database password
 
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password);

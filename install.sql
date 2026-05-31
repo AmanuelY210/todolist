@@ -1,7 +1,8 @@
-CREATE DATABASE IF NOT EXISTS todo_list;
-USE todo_list;
+-- First create the database via cPanel (e.g., "cpses_grxnyqcyi9_todolist")
+-- Then select it and run the rest:
+-- USE cpses_grxnyqcyi9_todolist;
 
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     full_name VARCHAR(100) NOT NULL,
     username VARCHAR(50) NOT NULL UNIQUE,
@@ -22,14 +23,10 @@ CREATE TABLE categories (
     UNIQUE KEY unique_category_per_user (user_id, name)
 );
 
-INSERT INTO categories (user_id, name, color) VALUES
-(1, 'Work', '#0d6efd'),
-(1, 'Personal', '#198754'),
-(1, 'Study', '#ffc107'),
-(1, 'Shopping', '#dc3545'),
-(1, 'Health', '#0dcaf0');
+-- Default categories are auto-created when a user registers.
+-- Do NOT insert them manually here.
 
-CREATE TABLE tasks (
+CREATE TABLE IF NOT EXISTS tasks (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     category_id INT DEFAULT NULL,
